@@ -12,10 +12,18 @@ namespace ReactiveUI.Contrib {
             target.Mirror(source, x => x);
         }
 
+        public static void Mirror<T>(this IList<T> target, IEnumerable<T> source, Func<T, bool> filter)
+        {
+            target.Mirror(source, x => x, filter);
+        }
+
         public static void Mirror<TTarget, TSource>(
             this IList<TTarget> target, 
             IEnumerable<TSource> source, 
-            Func<TSource,TTarget> selector) {
+            Func<TSource, TTarget> selector,            
+            Func<TSource, bool> filter = null,
+            Func<TTarget, TTarget, int> orderer = null)
+        {
             if (target == null) throw new ArgumentNullException("target");
 
             var sourceCollectionChanged = new Subject<NotifyCollectionChangedEventArgs>();
@@ -25,7 +33,9 @@ namespace ReactiveUI.Contrib {
             }
 
             var originalSource = source;
+            originalSource = (filter != null ? originalSource.Where(filter) : originalSource);
             var modifiedSource = originalSource.Select(selector);
+            modifiedSource = (orderer != null ? modifiedSource.OrderBy(x => x, new FuncComparator<TTarget>(orderer)) : modifiedSource);
 
             foreach (var item in modifiedSource) {
                 target.Add(item);
@@ -48,17 +58,84 @@ namespace ReactiveUI.Contrib {
 
                 if (args.OldItems != null) {
                     foreach (TSource item in args.OldItems) {
-                        target.RemoveAt(oldIndex);
+                        if (filter != null && !filter(item))
+                        {
+                            continue;
+                        }
+                        if (orderer == null)
+                        {
+                            target.RemoveAt(oldIndex);
+                            continue;
+                        }
+
+                        for (int i = 0; i < target.Count; i++)
+                        {
+                            if (orderer(target[i], selector(item)) == 0)
+                            {
+                                target.RemoveAt(i);
+                            }
+                        }
                     }
                 }
 
                 if (args.NewItems != null) {
                     foreach (TSource item in args.NewItems) {
+                        if (filter != null && !filter(item))
+                        {
+                            continue;
+                        }
+                        if (orderer == null)
+                        {
+                            target.Insert(args.NewStartingIndex, selector(item));
+                            continue;
+                        }
                         var toAdd = selector(item);
                         target.Add(toAdd);
                     }
                 }                
             });
+        }
+
+        private static int PositionForNewItem<T>(IList<T> list, T item, Func<T, T, int> orderer)
+        {
+            if (list.Count == 0)
+            {
+                return 0;
+            }
+            if (list.Count == 1)
+            {
+                return orderer(list[0], item) >= 0 ? 1 : 0;
+            }
+
+            // NB: This is the most tart way to do this possible
+            int? prevCmp = null;
+            int cmp;
+            for (int i = 0; i < list.Count; i++)
+            {
+                cmp = orderer(list[i], item);
+                if (prevCmp.HasValue && cmp != prevCmp)
+                {
+                    return i;
+                }
+                prevCmp = cmp;
+            }
+
+            return list.Count;
+        }
+
+        private class FuncComparator<T> : IComparer<T>
+        {
+            Func<T, T, int> _inner;
+
+            public FuncComparator(Func<T, T, int> comparer)
+            {
+                _inner = comparer;
+            }
+
+            public int Compare(T x, T y)
+            {
+                return _inner(x, y);
+            }
         }
     }
 }
