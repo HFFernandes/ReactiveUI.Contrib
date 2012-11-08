@@ -12,8 +12,7 @@ namespace ReactiveUI.Contrib {
             target.Mirror(source, x => x);
         }
 
-        public static void Mirror<T>(this IList<T> target, IEnumerable<T> source, Func<T, bool> filter)
-        {
+        public static void Mirror<T>(this IList<T> target, IEnumerable<T> source, Func<T, bool> filter) {            
             target.Mirror(source, x => x, filter);
         }
 
@@ -50,18 +49,20 @@ namespace ReactiveUI.Contrib {
 
                 if (args.Action == NotifyCollectionChangedAction.Reset) {
                     target.Clear();
+                    modifiedSource.ToObservable().Subscribe(target.Add);
                 }
 
                 int oldIndex = (args.Action == NotifyCollectionChangedAction.Replace ?
                     args.NewStartingIndex : args.OldStartingIndex);
 
 
-                if (args.OldItems != null) {
+                if (args.OldItems != null) {    
                     foreach (TSource item in args.OldItems) {
                         if (filter != null && !filter(item))
                         {
                             continue;
                         }
+
                         if (orderer == null)
                         {
                             target.RemoveAt(oldIndex);
@@ -84,13 +85,15 @@ namespace ReactiveUI.Contrib {
                         {
                             continue;
                         }
-                        if (orderer == null)
-                        {
-                            target.Insert(args.NewStartingIndex, selector(item));
+
+                        if (orderer == null) {
+                            var newIndex = Math.Min(args.NewStartingIndex, target.Count);
+                            target.Insert(newIndex, selector(item));
                             continue;
                         }
+
                         var toAdd = selector(item);
-                        target.Add(toAdd);
+                        target.Insert(PositionForNewItem(target, toAdd, orderer), toAdd);
                     }
                 }                
             });
