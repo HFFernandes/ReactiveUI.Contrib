@@ -57,7 +57,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CollectionSynchronizationMixin.cs" />
+    <Compile Include="EnumerableExtensions.cs" />
+    <Compile Include="KeyedReference.cs" />
     <Compile Include="ListAdapter.cs" />
+    <Compile Include="ObservableHashSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
