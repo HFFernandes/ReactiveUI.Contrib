@@ -49,6 +49,7 @@
     <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\packages\Rx-PlatformServices.2.0.21103\lib\Net40\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -58,9 +59,11 @@
   <ItemGroup>
     <Compile Include="CollectionSynchronizationMixin.cs" />
     <Compile Include="EnumerableExtensions.cs" />
+    <Compile Include="IObservableCollection.cs" />
     <Compile Include="KeyedReference.cs" />
     <Compile Include="ListAdapter.cs" />
     <Compile Include="ObservableHashSet.cs" />
+    <Compile Include="ObservableSynchronizedKeyedCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -28,7 +28,7 @@ namespace ReactiveUI.Contrib {
 
             var cv = CollectionViewSource.GetDefaultView(set);
             cv.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
-            cv.Groups.Should()
+            ////cv.Groups.Should()
         }
 
         public class Foo: ReactiveObject, IEquatable<Foo> {
